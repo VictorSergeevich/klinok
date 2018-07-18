@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+Host: amcook.ru
+Sitemap: http://amcook.ru/sitemap.xml

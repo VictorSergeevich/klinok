@@ -1,0 +1,73 @@
+<FilesMatch "((error_log)|(\.(db|inc|class)))$">
+  Order allow,deny
+</FilesMatch>
+
+Options -Indexes
+
+
+php_value upload_max_filesize "15M"
+php_value post_max_size "15M"
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ index.php?/$1 [QSA,L]
+  
+  ############################################################################
+  #### Перенаправляем протокол https на http                              ####
+  ############################################################################
+  RewriteCond %{HTTPS} on
+   # Проверяем наличие https в URL.
+  RewriteRule ^.*$ http://%{SERVER_NAME}%{REQUEST_URI}
+   # Перенаправляем протокол на http.
+  
+  ############################################################################
+  #### Выбор основного зеркала (или с www или без www)                    ####
+  ############################################################################
+   # 1. Редирект с www на без www. (раскоментировать директивы пункта 1)
+  RewriteCond %{HTTP_HOST} ^www\.(.*) [NC]
+   # Проверяем, содержит ли домен www (в начале URL).
+  RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+   # Перенаправляем URL на домен без www.
+  ####
+   # 2. Редирект без www на www. (раскоментировать директивы пункта 2)
+  #RewriteCond %{HTTP_HOST} !^www\.(.*) [NC]
+   # Проверяем, не содержит ли домен www (в начале URL).
+  #RewriteRule ^(.*)$ http://www.%{HTTP_HOST}/$1 [R=301,L]
+   # Перенаправляем URL на домен c www.
+  
+
+  ############################################################################
+  #### Убираем повторяющиеся слеши (/) в URL                              ####
+  ############################################################################
+  RewriteCond %{REQUEST_URI} ^(.*)/{2,}?(.*)$
+    # Проверяем, повторяется ли слеш (//) более двух раз.
+  RewriteRule (.*) %1/%2 [R=301,L]
+   # Исключаем все лишние слеши.
+
+  ExpiresActive On
+  ExpiresDefault "access plus 86400 seconds"
+
+  ExpiresByType image/gif "access plus 86400 seconds"
+  ExpiresByType image/jpeg "access plus 86400 seconds"
+  ExpiresByType image/png "access plus 86400 seconds"
+  ExpiresByType text/css "access plus 86400 seconds"
+  ExpiresByType text/javascript "access plus 86400 seconds"
+  ExpiresByType application/javascript "access plus 86400 seconds"
+  ExpiresByType application/x-javascript "access plus 86400 seconds"
+
+</IfModule>
+
+<ifModule mod_headers.c>
+<FilesMatch ".(flv|gif|jpg|jpeg|png|ico|swf|js|css|pdf)$">
+  Header set Cache-Control "max-age=86400"
+</FilesMatch>
+</ifModule>
+
+
+ErrorDocument 404 /404.php
+php_value default_charset utf-8
+AddType 'text/html; charset=utf-8' .html .htm .shtml
